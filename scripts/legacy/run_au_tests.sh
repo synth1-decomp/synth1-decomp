@@ -31,10 +31,23 @@ if [ -d /Applications/Xcode941.app/Contents/Developer ]; then
   export DEVELOPER_DIR=/Applications/Xcode941.app/Contents/Developer
 fi
 mkdir -p "$BUILD"
-xcrun clang -arch x86_64 -isysroot "$(xcrun --show-sdk-path)" -mmacosx-version-min=10.8 -std=gnu99 -O1 -g -Wall -Wno-four-char-constants \
+TARGET="-arch x86_64 -isysroot $(xcrun --show-sdk-path) -mmacosx-version-min=10.8"
+xcrun clang $TARGET -std=gnu99 -O1 -g -Wall -Wno-four-char-constants \
   "$HERE/au_tests.c" -framework AudioToolbox -framework AudioUnit -framework CoreFoundation -o "$BUILD/au_tests"
+xcrun clang $TARGET -dynamiclib -O1 -g -Wall -Wno-deprecated-declarations \
+  "$HERE/au_isolation.c" -framework CoreFoundation -framework CoreServices -o "$BUILD/libau_isolation.dylib"
 
+# Run the host with au_isolation.c inserted: the AU sees default settings and creates its
+# Synth1Patches folders in a temporary folder, so the user's settings and ~/Documents are untouched
+TEST_HOME=$(mktemp -d "${TMPDIR:-/tmp}/synth1-au-tests.XXXXXX")
+trap 'rm -rf "$TEST_HOME"' EXIT
+export SYNTH1_TEST_HOME=$TEST_HOME
+export DYLD_INSERT_LIBRARIES=$BUILD/libau_isolation.dylib
+
+status=0
 if [ $GEN = 1 ]; then
-  exec "$BUILD/au_tests" --gen "$COMP" "$HERE/reference.txt" "$HERE/default_state.plist"
+  "$BUILD/au_tests" --gen "$COMP" "$HERE/reference.txt" "$HERE/default_state.plist" || status=$?
+else
+  "$BUILD/au_tests" "$COMP" "$HERE/reference.txt" "$HERE/default_state.plist" "$@" || status=$?
 fi
-exec "$BUILD/au_tests" "$COMP" "$HERE/reference.txt" "$HERE/default_state.plist" "$@"
+exit $status

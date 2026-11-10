@@ -26,10 +26,9 @@
  * The host zero-fills malloc() (install_zero_fill()) because CSynthesizer1 leaves
  * m_hNotifyWnd uninitialized and SetParameter() would post to a garbage pointer.
  *
- * Side effect of the AU itself (not of these tests): constructing the engine creates
- * ~/Documents/Synth1Patches/soundbank00 and .../zipbank if they are missing (FSFindFolder,
- * which ignores $HOME). The golden scenarios restore default_state.plist first, so they do
- * not depend on what is in the user's soundbank00.
+ * The scripts run the host with tests/au/au_isolation.c loaded, so the AU sees default settings
+ * and creates its Synth1Patches folders in a temporary folder instead of ~/Documents. Child
+ * processes are started directly (run_child()), so they inherit that library too.
  */
 
 #include <AudioToolbox/AudioToolbox.h>
@@ -44,8 +43,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <spawn.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+extern char** environ;
 
 /* ------------------------------------------------------------------------------------------ */
 /* t1-style harness                                                                           */
@@ -653,18 +656,59 @@ static int child_main(int argc, char** argv)
     return 2;
 }
 
-/** Runs this program in child mode; returns the first output line (static) or NULL. */
+/**
+ * Runs this program in child mode; returns the first output line (static) or NULL.
+ * args are the child's arguments, separated by spaces; '...' quotes an argument with spaces.
+ * The child is started directly, not through a shell: macOS drops DYLD_INSERT_LIBRARIES when it
+ * starts /bin/sh, and the child needs it for au_isolation.c.
+ */
 static const char* run_child(const char* args)
 {
     static char line[256];
-    char cmd[8192];
-    FILE* p;
-    snprintf(cmd, sizeof cmd, "'%s' --child '%s' %s", g_selfPath, g_componentPath, args);
-    p = popen(cmd, "r");
-    if (!p) return NULL;
+    char buf[8192], rest[256], *p = buf, *argv[16];
+    int argc = 0, fds[2], status;
+    pid_t pid;
+    posix_spawn_file_actions_t actions;
+    FILE* out;
+
+    argv[argc++] = g_selfPath;
+    argv[argc++] = "--child";
+    argv[argc++] = (char*)g_componentPath;
+    snprintf(buf, sizeof buf, "%s", args);
+    while (argc < 15) {
+        while (*p == ' ') p++;
+        if (!*p) break;
+        if (*p == '\'') {
+            argv[argc++] = ++p;
+            while (*p && *p != '\'') p++;
+        } else {
+            argv[argc++] = p;
+            while (*p && *p != ' ') p++;
+        }
+        if (*p) *p++ = 0;
+    }
+    argv[argc] = NULL;
+
+    if (pipe(fds) != 0) return NULL;
+    posix_spawn_file_actions_init(&actions);
+    posix_spawn_file_actions_adddup2(&actions, fds[1], STDOUT_FILENO);
+    posix_spawn_file_actions_addclose(&actions, fds[0]);
+    posix_spawn_file_actions_addclose(&actions, fds[1]);
+    status = posix_spawn(&pid, g_selfPath, &actions, NULL, argv, environ);
+    posix_spawn_file_actions_destroy(&actions);
+    close(fds[1]);
+    if (status != 0) { close(fds[0]); return NULL; }
+
     line[0] = 0;
-    if (!fgets(line, sizeof line, p)) line[0] = 0;
-    if (pclose(p) != 0) return NULL;
+    out = fdopen(fds[0], "r");
+    if (out) {
+        if (!fgets(line, sizeof line, out)) line[0] = 0;
+        while (fgets(rest, sizeof rest, out)) {}   /* let the child finish writing */
+        fclose(out);
+    } else {
+        close(fds[0]);
+    }
+    if (waitpid(pid, &status, 0) < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) return NULL;
     return line;
 }
 

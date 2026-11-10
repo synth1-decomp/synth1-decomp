@@ -65,9 +65,10 @@ repeated open/close. Six rendered scenarios are compared with golden hashes in `
 which were generated from the **original release binary**; the rebuilt component matches them.
 
 Notes:
-- Creating the Audio Unit creates `~/Documents/Synth1Patches/soundbank00` and `zipbank` if missing, exactly
-  like the plugin does in a host. This cannot be redirected from outside, so the AU tests do the same.
-- The golden scenarios assume Synth1's default preferences (no `jp.daichi.synth1` domain).
+- The tests never touch the user's Synth1 settings or `~/Documents`. The test host runs with
+  `tests/au/au_isolation.c` inserted, which gives the Audio Unit an empty in-memory preference store
+  (the default settings the golden scenarios expect) and a temporary folder for the
+  `Synth1Patches` folders it creates. The folder is removed after the run.
 - The engine never initializes the window pointer it posts parameter notifications to; with recycled
   memory a host can crash in `SetParameter` (a bug in the original release). The test host makes
   allocations zero-filled so that this cannot happen during the tests.
