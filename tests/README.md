@@ -1,7 +1,7 @@
 # Tests
 
 Two test suites cover everything except the GUI and the Win32 window/Cocoa emulation. Neither touches
-`src/` or the reproducible build: the byte-identical release build (`build.sh`) is unaffected.
+`src/` or the reproducible build: the byte-identical release build (`scripts/legacy/build.sh`) is unaffected.
 
 Requirements: macOS 10.13.6 with Xcode 9.4.1 at `/Applications/Xcode941.app` (the engine needs libstdc++,
 which later Xcode versions removed), the same as the release build.
@@ -9,10 +9,10 @@ which later Xcode versions removed), the same as the release build.
 ## Unit tests (`tests/unit/`)
 
 ```
-tests/run_tests.sh                       # build and run all unit tests
-tests/run_tests.sh vcf lfo               # only tests whose "suite.name" contains vcf or lfo
-tests/run_tests.sh --files 'unit/test_vc*.cpp'  # compile only some test files
-tests/run_tests.sh --coverage            # instrumented build + coverage report of the engine sources
+scripts/legacy/run_tests.sh                                # build and run all unit tests
+scripts/legacy/run_tests.sh vcf lfo                        # only tests whose "suite.name" contains vcf or lfo
+scripts/legacy/run_tests.sh --files 'unit/test_vc*.cpp'    # compile only some test files
+scripts/legacy/run_tests.sh --coverage                     # instrumented build + coverage report of the engine sources
 ```
 
 `--coverage` builds a separate `-O0` instrumented variant in `build/tests-coverage/` (clang source-based
@@ -37,7 +37,7 @@ functions the engine calls are replaced by recording stubs (`tests/harness/cocoa
 | `test_prefs`, `test_synth1_settings`, `test_soundlib_setup`                                                                                                             | the settings code against the preference and folder fakes: INI helpers, enable flags, CC map persistence, MIDI learn, bank/zip folder settings, the sound library's first-instance setup |
 
 The tests never touch the user's preferences, Documents folder or temporary folder. In the test build
-only, `run_tests.sh` compiles the three engine files that use these services (`src/winemu_au.cpp`,
+only, `scripts/legacy/run_tests.sh` compiles the three engine files that use these services (`src/winemu_au.cpp`,
 `src/techpop/common.cpp`, `src/techpop/sound.cpp`) with `-D` redirects to test doubles
 (`tests/harness/os_fakes.h`):
 
@@ -53,9 +53,9 @@ at a temporary bank folder (`soundtest::IsolatedLibrary` in `tests/unit/sound_fi
 ## Audio Unit tests (`tests/au/`)
 
 ```
-./build.sh                                # build/Synth1.component
-tests/au/run_au_tests.sh                  # test build/Synth1.component
-tests/au/run_au_tests.sh path/to/Synth1.component [filter ...]
+scripts/legacy/build.sh                                         # build/Synth1.component
+scripts/legacy/run_au_tests.sh                                  # test build/Synth1.component
+scripts/legacy/run_au_tests.sh path/to/Synth1.component [filter ...]
 ```
 
 A small C host loads the built component, registers its factory in-process (so no logged-in session or

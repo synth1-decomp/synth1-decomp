@@ -27,7 +27,7 @@ To produce a byte-for-byte match of that release we need to replicate its build 
 
 ## Building
 
-The provided `build.sh` script configures the build environment, builds the plugin, and verifies it against the original.
+The provided `scripts/legacy/build.sh` script configures the build environment, builds the plugin, and verifies it against the original.
 
 Options:
 

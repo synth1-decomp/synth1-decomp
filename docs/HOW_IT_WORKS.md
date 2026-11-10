@@ -1,7 +1,7 @@
 # How the reproducible build works
 
 A plain Xcode build of `src/` gives a working plugin. 
-Making it byte-identical to the shipped binary needs the steps below. `build.sh` does all of them.
+Making it byte-identical to the shipped binary needs the steps below. `scripts/legacy/build.sh` does all of them.
 
 ## 1. Paths
 
@@ -24,7 +24,7 @@ Two more build inputs are fixed:
 
 ## 2. Object timestamps
 
-Each N_OSO entry records its object file's modification time. `release/oso_mtimes.txt` lists the
+Each N_OSO entry records its object file's modification time. `scripts/legacy/release/oso_mtimes.txt` lists the
 original values, read from the original debug map. After xcodebuild, the AU's objects get these
 times and the AU is relinked with Xcode's own link command, taken from the build log.
 
@@ -36,7 +36,7 @@ order. That order comes from walking a pointer-keyed set filled by parallel pars
 it changes from one link to the next. It decides the dylib grouping of `__stub_helper`, and
 through that the contents of `__la_symbol_ptr`.
 
-`build.sh` relinks with `-Xlinker -t` until the order matches the original's: CoreFoundation,
+`scripts/legacy/build.sh` relinks with `-Xlinker -t` until the order matches the original's: CoreFoundation,
 Foundation, CoreGraphics, CoreText, libobjc. This usually takes 1–10 links.
 
 The original also compiled its Objective-C files without modules. Modules add autolink load
@@ -58,7 +58,7 @@ had exactly the same 7,253 stabs, with strings **316 bytes shorter** than ours. 
 that produced this is unknown: the UUID only fixes the total. A five-character-shorter
 target name would explain −320.
 
-`build.sh` therefore relinks the GUI bundle executable from copies of its 64 objects:
+`scripts/legacy/build.sh` therefore relinks the GUI bundle executable from copies of its 64 objects:
 - in a directory 5 characters shorter (`Synth1ViewFactory.build`), giving −320;
 - with `synth1.o` renamed `synth1-pad.o`, giving +4.
 
@@ -67,5 +67,5 @@ strip-and-copy step.
 
 ## 5. Verification
 
-`release/expected.sha256` holds the SHA-256 of every file in the original bundle. The build passes
+`scripts/legacy/release/expected.sha256` holds the SHA-256 of every file in the original bundle. The build passes
 only if all 28 match and there are no extra files.

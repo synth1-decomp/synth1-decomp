@@ -1,10 +1,10 @@
 #!/bin/bash
 # Rebuild Synth1.component (v1.13 beta11, macOS AU) byte-identically from src/.
 #
-#   ./build.sh            build, then verify against release/expected.sha256
-#   ./build.sh --verify   only verify an existing build/Synth1.component
-#   ./build.sh --clean    remove the staging copy and DerivedData folder afterwards
-#   ./build.sh --force    skip the macOS version check and ownership safety checks
+#   scripts/legacy/build.sh            build, then verify against scripts/legacy/release/expected.sha256
+#   scripts/legacy/build.sh --verify   only verify an existing build/Synth1.component
+#   scripts/legacy/build.sh --clean    remove the staging copy and DerivedData folder afterwards
+#   scripts/legacy/build.sh --force    skip the macOS version check and ownership safety checks
 #
 # Requirements
 #   - macOS 10.13.6
@@ -29,7 +29,8 @@
 #   The result is checked file by file against the SHA-256 hashes of the original.
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+RELEASE=$ROOT/scripts/legacy/release
 XCODE=/Applications/Xcode941.app
 HOMEDIR=/Users/Ichiro
 SRCDIR=$HOMEDIR/dev/synth1_mac113
@@ -55,17 +56,17 @@ say()  { printf '==> %s\n' "$*"; }
 #   $* = message
 die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-# Check build/Synth1.component against release/expected.sha256, comparing both the
-# hashes and the file count (.DS_Store files aren't counted). Prints any mismatches,
+# Check build/Synth1.component against scripts/legacy/release/expected.sha256, comparing both
+# the hashes and the file count (.DS_Store files aren't counted). Prints any mismatches,
 # leaves the full shasum output in build/verify.log, and dies if the build differs.
 verify() {
-  say "verifying build/Synth1.component against release/expected.sha256"
+  say "verifying build/Synth1.component against scripts/legacy/release/expected.sha256"
   [ -d "$OUT/Synth1.component" ] || die "no build/Synth1.component to verify"
   local bad=0 n
-  (cd "$OUT" && shasum -a 256 -c "$ROOT/release/expected.sha256") > "$OUT/verify.log" 2>&1 || bad=1
+  (cd "$OUT" && shasum -a 256 -c "$RELEASE/expected.sha256") > "$OUT/verify.log" 2>&1 || bad=1
   grep -v ': OK$' "$OUT/verify.log" || true
   n=$(cd "$OUT" && find Synth1.component -type f ! -name .DS_Store | wc -l | tr -d ' ')
-  local want; want=$(wc -l < "$ROOT/release/expected.sha256" | tr -d ' ')
+  local want; want=$(wc -l < "$RELEASE/expected.sha256" | tr -d ' ')
   [ "$n" = "$want" ] || { echo "file count: $n (expected $want)"; bad=1; }
   if [ $bad = 0 ]; then
     say "OK: all $want files are byte-identical to the original release"
@@ -179,7 +180,7 @@ while read -r obj t; do
   case "$obj" in ''|'#'*) continue ;; esac
   [ -f "$AUOBJ/$obj" ] || die "missing object $obj"
   perl -e 'utime $ARGV[0], $ARGV[0], $ARGV[1] or die "$ARGV[1]: $!\n"' "$t" "$AUOBJ/$obj"
-done < "$ROOT/release/oso_mtimes.txt"
+done < "$RELEASE/oso_mtimes.txt"
 
 # Relink the GUI bundle executable from copies of its objects at shorter paths, which
 # reproduces the original LC_UUID (see docs/HOW_IT_WORKS.md), then strip it again

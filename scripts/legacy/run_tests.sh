@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build and run the Synth1 engine unit tests (macOS 10.13 + Xcode 9.4.1).
 #
-#   tests/run_tests.sh [--build-dir DIR] [--files GLOB] [--coverage] [filter ...]
+#   scripts/legacy/run_tests.sh [--build-dir DIR] [--files GLOB] [--coverage] [filter ...]
 #
 # --files GLOB  compile only the test files matching GLOB (relative to tests/, default unit/*.cpp)
 # --coverage    build an instrumented -O0 variant (in build/tests-coverage) and print a line,
@@ -11,10 +11,10 @@
 # Cocoa/AU glue) are compiled with the release compiler flags into a separate build directory,
 # linked with the tests in tests/unit/ and the Cocoa stubs in tests/harness/, and run. Filters
 # select tests whose "suite.name" contains one of them. Nothing in src/ is modified, and the
-# release build (build.sh) is not affected.
+# release build (scripts/legacy/build.sh) is not affected.
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=$ROOT/src
 T=$ROOT/tests
 BUILD=$ROOT/build/tests

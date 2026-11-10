@@ -2,7 +2,7 @@
  * @file os_fakes.h
  * @brief Test doubles for the operating-system services the engine uses for settings and folders.
  *
- * In the test build only, tests/run_tests.sh compiles the engine files that call these services
+ * In the test build only, scripts/legacy/run_tests.sh compiles the engine files that call these services
  * with -D redirects (e.g. -DCFPreferencesSetAppValue=t1_CFPreferencesSetAppValue), so the calls
  * land in os_fakes.cpp instead of the real system:
  * - CFPreferencesCopyAppValue / CFPreferencesSetAppValue / CFPreferencesAppSynchronize use an

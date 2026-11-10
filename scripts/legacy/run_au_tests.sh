@@ -1,10 +1,10 @@
 #!/bin/bash
 # Build and run the black-box Audio Unit tests against a built Synth1.component (macOS).
 #
-#   tests/au/run_au_tests.sh [path/to/Synth1.component] [filter ...]
-#   tests/au/run_au_tests.sh --gen path/to/Synth1.component
+#   scripts/legacy/run_au_tests.sh [path/to/Synth1.component] [filter ...]
+#   scripts/legacy/run_au_tests.sh --gen path/to/Synth1.component
 #
-# Default component: build/Synth1.component in the repo root (as produced by build.sh).
+# Default component: build/Synth1.component in the repo root (as produced by scripts/legacy/build.sh).
 # The test host au_tests.c loads the bundle, registers its factory in-process and drives the AU
 # through the public Audio Unit API; nothing is linked from src/. Filters select tests whose
 # name contains one of them.
@@ -14,8 +14,8 @@
 # the rebuild must reproduce.
 set -euo pipefail
 
-HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+HERE=$ROOT/tests/au     # the test host source and its reference files
 BUILD=$ROOT/build/au-tests
 GEN=0
 if [ "${1:-}" = --gen ]; then GEN=1; shift; fi
