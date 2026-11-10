@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build and run the Synth1 engine unit tests (macOS 10.13 + Xcode 9.4.1).
 #
-#   scripts/legacy/run_tests.sh [--build-dir DIR] [--files GLOB] [--coverage] [filter ...]
+#   scripts/legacy/run_unit_tests.sh [--build-dir DIR] [--files GLOB] [--coverage] [filter ...]
 #
 # --files GLOB  compile only the test files matching GLOB (relative to tests/, default unit/*.cpp)
 # --coverage    build an instrumented -O0 variant (in build/tests-coverage) and print a line,

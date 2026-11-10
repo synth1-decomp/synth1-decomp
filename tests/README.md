@@ -9,10 +9,10 @@ which later Xcode versions removed), the same as the release build.
 ## Unit tests (`tests/unit/`)
 
 ```
-scripts/legacy/run_tests.sh                                # build and run all unit tests
-scripts/legacy/run_tests.sh vcf lfo                        # only tests whose "suite.name" contains vcf or lfo
-scripts/legacy/run_tests.sh --files 'unit/test_vc*.cpp'    # compile only some test files
-scripts/legacy/run_tests.sh --coverage                     # instrumented build + coverage report of the engine sources
+scripts/legacy/run_unit_tests.sh                                # build and run all unit tests
+scripts/legacy/run_unit_tests.sh vcf lfo                        # only tests whose "suite.name" contains vcf or lfo
+scripts/legacy/run_unit_tests.sh --files 'unit/test_vc*.cpp'    # compile only some test files
+scripts/legacy/run_unit_tests.sh --coverage                     # instrumented build + coverage report of the engine sources
 ```
 
 `--coverage` builds a separate `-O0` instrumented variant in `build/tests-coverage/` (clang source-based
@@ -37,7 +37,7 @@ functions the engine calls are replaced by recording stubs (`tests/harness/cocoa
 | `test_prefs`, `test_synth1_settings`, `test_soundlib_setup`                                                                                                             | the settings code against the preference and folder fakes: INI helpers, enable flags, CC map persistence, MIDI learn, bank/zip folder settings, the sound library's first-instance setup |
 
 The tests never touch the user's preferences, Documents folder or temporary folder. In the test build
-only, `scripts/legacy/run_tests.sh` compiles the three engine files that use these services (`src/winemu_au.cpp`,
+only, `scripts/legacy/run_unit_tests.sh` compiles the three engine files that use these services (`src/winemu_au.cpp`,
 `src/techpop/common.cpp`, `src/techpop/sound.cpp`) with `-D` redirects to test doubles
 (`tests/harness/os_fakes.h`):
 
